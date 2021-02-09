@@ -5,18 +5,21 @@
 # Displays "Y U no love me?!" when receiving a SIGINT signal
 # Deletes the file /var/run/holbertonscript.pid and terminate itself when receiving a SIGQUIT or SIGTERM signal
 
-terminator() {
-  rm /var/run/holbertonscript.pid
-  exit
-}
+sleep() {
+  ! read -rt "$1"
+} <> <(:)
 
-echo "$$" > /var/run/holbertonscript.pid
+echo "$$" >| "${pidfile:=/var/run/holbertonscript.pid}"
 
-while true
-do
-  echo "To infinity and beyond"
-  sleep 2
-  trap 'echo "Y U no love me?!"' SIGINT
-  trap 'echo "I hate the kill command" && terminator' SIGTERM
-  trap 'terminator' SIGQUIT
-done
+trap '
+  echo "Y U no love me?!"
+' INT
+trap '
+  rm -f "${pidfile}" 2>/dev/null
+  exit 131
+' QUIT
+trap '
+  echo "I hate the kill command"
+  rm -f "${pidfile}" 2>/dev/null
+  exit 143
+' TERM
