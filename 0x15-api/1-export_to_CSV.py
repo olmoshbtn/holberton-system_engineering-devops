@@ -1,20 +1,22 @@
 #!/usr/bin/python3
 """
-Summarize the TODO lists of all employees and write it to a file as JSON
+Summarize an employee's TODO list and write it to a file as a CSV
 """
-from json import dump
+from argparse import ArgumentParser
+from csv import QUOTE_ALL, writer
+from os import path
 from requests import get
+from sys import argv
 
 USERS = 'https://jsonplaceholder.typicode.com/users'
 TODOS = 'https://jsonplaceholder.typicode.com/todos'
 
 if __name__ == '__main__':
-    with open('todo_all_employees.json', 'w') as ostream:
-        dump({
-            str(user['id']): [{
-                "username": user['username'],
-                "task": task['title'],
-                "completed": task['completed'],
-            } for task in get(TODOS, params={'userId': user['id']}).json()]
-            for user in get(USERS).json()
-        }, ostream)
+    parser = ArgumentParser(prog=path.basename(argv[0]))
+    parser.add_argument('id', type=int, help='employee ID')
+    args = parser.parse_args()
+    user = get('/'.join([USERS, str(args.id)])).json()
+    with open('.'.join([str(args.id), 'csv']), 'w', newline='') as ostream:
+        writer(ostream, quoting=QUOTE_ALL).writerows(
+            [str(args.id), user['username'], task['completed'], task['title']]
+            for task in get(TODOS, params={'userId': args.id}).json())
