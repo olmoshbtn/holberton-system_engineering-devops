@@ -20,4 +20,3 @@ if __name__ == '__main__':
         writer(ostream, quoting=QUOTE_ALL).writerows(
             [str(args.id), user['username'], task['completed'], task['title']]
             for task in get(TODOS, params={'userId': args.id}).json())
-
