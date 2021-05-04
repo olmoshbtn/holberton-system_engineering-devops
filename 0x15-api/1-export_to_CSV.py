@@ -2,21 +2,20 @@
 """
 Summarize an employee's TODO list and write it to a file as a CSV
 """
-from argparse import ArgumentParser
-from csv import QUOTE_ALL, writer
-from os import path
-from requests import get
+
+import csv
+import requests
 from sys import argv
 
-USERS = 'https://jsonplaceholder.typicode.com/users'
-TODOS = 'https://jsonplaceholder.typicode.com/todos'
-
 if __name__ == '__main__':
-    parser = ArgumentParser(prog=path.basename(argv[0]))
-    parser.add_argument('id', type=int, help='employee ID')
-    args = parser.parse_args()
-    user = get('/'.join([USERS, str(args.id)])).json()
-    with open('.'.join([str(args.id), 'csv']), 'w', newline='') as ostream:
-        writer(ostream, quoting=QUOTE_ALL).writerows(
-            [str(args.id), user['username'], task['completed'], task['title']]
-            for task in get(TODOS, params={'userId': args.id}).json())
+    userId = argv[1]
+    user = requests.get("https://jsonplaceholder.typicode.com/users/{}".
+                        format(userId), verify=False).json()
+    todo = requests.get("https://jsonplaceholder.typicode.com/todos?userId={}".
+                        format(userId), verify=False).json()
+    with open("{}.csv".format(userId), 'w', newline='') as csvfile:
+        taskwriter = csv.writer(csvfile, quoting=csv.QUOTE_ALL)
+        for task in todo:
+            taskwriter.writerow([int(userId), user.get('username'),
+                                 task.get('completed'),
+                                 task.get('title')])
