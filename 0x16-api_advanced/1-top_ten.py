@@ -1,26 +1,23 @@
 #!/usr/bin/python3
-"""
-Print the titles of the top ten posts for a given subreddit
-"""
+"""Get number of subscribers for a given subreddit in REDDIT's API,
+invalid subreddit should return 0"""
 import requests
-
-URL = 'https://www.reddit.com/r/{}/hot.json'
-USER_AGENT = 'Mozilla/5.0 (Linux x86_64; rv:47.0) Gecko/20100101 Firefox/47.0'
 
 
 def top_ten(subreddit):
-    """
-    Query reddit for the top ten posts of a subreddit
-    """
-    resp = requests.get(
-        URL.format(subreddit),
-        headers={'User-Agent': USER_AGENT},
-        params={'limit': 10},
-        allow_redirects=False,
-        timeout=10
-    )
-    if resp.status_code == 200:
-        for post in resp.json()['data']['children']:
-            print(post['data']['title'])
+    URL = 'https://www.reddit.com'
+    header = {'user-agent': 'miguel/0.0.1'}
+    req = requests.get(URL + '/r/' + subreddit + '/hot.json', headers=header,
+                       allow_redirects=False)
+
+    if req.status_code == 200:
+        data = req.json()
+        i = 0
+        for item in data['data']['children']:
+            if i < 10:
+                print(item['data']['title'])
+            else:
+                break
+            i += 1
     else:
-        print('None')
+        print(None)
