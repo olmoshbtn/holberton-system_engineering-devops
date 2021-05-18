@@ -1,15 +1,17 @@
 #!/usr/bin/python3
-'''Get number of reddit channel subscribers'''
+"""Get number of subscribers for a given subreddit in REDDIT's API,
+invalid subreddit should return 0"""
 import requests
-
-BASE_URL = 'http://reddit.com/r/{}/about.json'
 
 
 def number_of_subscribers(subreddit):
-    '''Gets number of reddit subscribers'''
-    headers = {'User-agent': 'Unix:0-subs:v1'}
-    response = requests.get(BASE_URL.format(subreddit),
-                            headers=headers)
-    if response.status_code != 200:
-        return 0
-    return response.json().get('data', {}).get('subscribers', 0)
+    URL = 'https://www.reddit.com'
+    header = {'user-agent': 'miguel/0.0.1'}
+    req = requests.get(URL + '/r/' + subreddit + '/about.json', headers=header,
+                       allow_redirects=False)
+
+    if req.status_code == 200:
+        data = req.json()
+        return (data['data']['subscribers'])
+    else:
+        return (0)
