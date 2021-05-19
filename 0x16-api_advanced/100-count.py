@@ -1,36 +1,35 @@
 #!/usr/bin/python3
-"""Return a list for all hot post in a given subreddit in REDDIT's API,
-invalid subreddit should return an Empty list"""
+"""
+Show number of occurrences of keywords in hot post titles (case-insensitive)
+"""
+import re
 import requests
 
+API = 'https://www.reddit.com/r/{}/hot.json'
 
-def count_words(subreddit, word_list, after=None, dic=None, item=0):
-    """Print a list of words with the respective times appears into a string"""
-    if item < 1:
-        dic = {i: 0 for i in word_list}
 
-    URL = 'https://www.reddit.com/r/' + subreddit + '/hot.json'
-    header = {'user-agent': 'miguel/0.0.1'}
-    req = requests.get(URL, headers=header, allow_redirects=False,
-                       params={'after': str(after)})
-
-    if req.status_code == 200:
-        data = req.json()
-        items = data['data']['children']
-        titles = list(map(lambda x: x.get('data').get('title'), items))
-        after = data['data']['after']
-        for title in titles:
-            title = title.split(' ')
-            for sb in title:
-                for word in word_list:
-                    if sb.lower() == word.lower():
-                        dic[word] += 1
-        if after:
-            count_words(subreddit, word_list, after, dic, item + 1)
+def count_words(subreddit, wordlist, nums=None, after=None):
+    """
+    Query reddit for hot posts and print total occurrences of each keyword
+    """
+    r = requests.get(
+        API.format(subreddit),
+        headers={'User-Agent': 'Mozilla/5.0'},
+        params={'after': after, 'limit': 100},
+        allow_redirects=False,
+    )
+    if r.status_code == 200:
+        nums = nums or dict.fromkeys(wordlist, 0)
+        data = r.json()['data']
+        page = [word for post in data['children']
+                for word in post['data']['title'].split()]
+        for key in wordlist:
+            for word in page:
+                if key.casefold() == word.casefold():
+                    nums[key] += 1
+        if data['after'] is None:
+            keys = sorted(filter(nums.get, nums), key=lambda k: (-nums[k], k))
+            for key in keys:
+                print('{}: {}'.format(key, nums[key]))
         else:
-            dic = sorted(dic.items(), key=lambda x: x[1], reverse=True)
-            for item in dic:
-                if (item[1] > 0):
-                    print('{}: {}'.format(item[0], item[1]))
-    else:
-        print('')
+            count_words(subreddit, wordlist, nums, data['after'])
